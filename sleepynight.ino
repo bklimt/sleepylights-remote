@@ -1,8 +1,19 @@
+#include <avr/sleep.h>
 #include <ir_Lego_PF_BitStreamEncoder.h>
 #include <boarddefs.h>
 #include <IRremoteInt.h>
 #include <IRremote.h>
 
+// Arduino Uno:
+// - IR pin: 3
+// - LED pin: 1
+// - BUTTON pin: 2
+// ATtiny85:
+// - IR pin: 1
+// - LED pin: ?
+// - BUTTON pin: ?
+
+#define IR_PIN 3
 #define LED_PIN 1
 #define BUTTON_PIN 2
 
@@ -39,7 +50,7 @@ void step() {
   if (color >= 14) {
     color = 0;
   }
-  //irsend.sendNEC(COLORS[color], 32);
+  irsend.sendNEC(COLORS[color], 32);
 }
 
 void wake() {
@@ -48,19 +59,30 @@ void wake() {
 
 void sleep() {
   digitalWrite(LED_PIN, LOW);
+  delay(5);
+  sleep_mode();
 }
 
+volatile bool was_clicked = false;
 volatile unsigned long last_click = 0;
 volatile unsigned long last_handled_click = 0;
 
 void click() {
+  wake();
+  was_clicked = true;
+}
+
+void handleClick() {
+  if (!was_clicked) {
+    return;
+  }
+  was_clicked = false;
   last_click = millis();
   if (last_click - last_handled_click < 200) {
     return;
   }
   last_handled_click = last_click;
   // Serial.write("click!\n");
-  wake();
   step();
 }
 
@@ -71,13 +93,18 @@ void setup() {
 
   attachInterrupt(digitalPinToInterrupt(BUTTON_PIN), click, FALLING);
 
+  set_sleep_mode(SLEEP_MODE_PWR_DOWN);
+
   // Serial.begin(9600);
 }
 
 void loop() {
   unsigned long now = millis();
-  if (now - last_click > 1000) {
+  if (now - last_click > 500) {
+    // Serial.write("Sleeping\n");
     sleep();
   }
-  delay(500);
+  handleClick();
+  // Serial.write("awake!\n");
+  delay(100);
 }
