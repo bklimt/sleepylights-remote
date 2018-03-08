@@ -4,18 +4,32 @@
 #include <IRremoteInt.h>
 #include <IRremote.h>
 
-// Arduino Uno:
-// - IR pin: 3
-// - LED pin: 1
-// - BUTTON pin: 2
-// ATtiny85:
-// - IR pin: 1
-// - LED pin: ?
-// - BUTTON pin: ?
+#if defined(__AVR_ATtiny85__)
+#define IR_PIN 1
+#define LED_PIN 3
+#define BUTTON_PIN 2
 
+#define ENABLE_INTERRUPTS do { \
+  GIMSK = 0b00100000; \
+  PCMSK = 0b00010011; \
+  sei(); \
+} while (0)
+
+#define INTERRUPT ISR(PCINT0_vect)
+
+#else
+#error "no"
 #define IR_PIN 3
 #define LED_PIN 1
 #define BUTTON_PIN 2
+
+#define ENABLE_INTERRUPTS do { \
+  attachInterrupt(digitalPinToInterrupt(BUTTON_PIN), click, FALLING); \
+} while (0)
+
+#define INTERRUPT void click()
+
+#endif
 
 unsigned long POWER       = 0x00FF609F;
 unsigned long SLEEP       = 0x00FF50AF;
@@ -53,10 +67,6 @@ void step() {
   irsend.sendNEC(COLORS[color], 32);
 }
 
-void wake() {
-  digitalWrite(LED_PIN, HIGH);
-}
-
 void sleep() {
   digitalWrite(LED_PIN, LOW);
   delay(5);
@@ -67,9 +77,9 @@ volatile bool was_clicked = false;
 volatile unsigned long last_click = 0;
 volatile unsigned long last_handled_click = 0;
 
-void click() {
-  wake();
-  was_clicked = true;
+INTERRUPT {
+  digitalWrite(LED_PIN, HIGH);
+  was_clicked = (digitalRead(BUTTON_PIN) != HIGH);
 }
 
 void handleClick() {
@@ -89,10 +99,22 @@ void handleClick() {
 void setup() {
   pinMode(BUTTON_PIN, INPUT_PULLUP);
   pinMode(LED_PIN, OUTPUT);
-  irsend.sendNEC(DARK_BLUE, 32);
 
-  attachInterrupt(digitalPinToInterrupt(BUTTON_PIN), click, FALLING);
+  // Here's a sequence just to see that it's running.
+  digitalWrite(LED_PIN, HIGH);
+  delay(500);
+  digitalWrite(LED_PIN, LOW);
+  delay(500);
+  digitalWrite(LED_PIN, HIGH);
+  delay(500);
+  digitalWrite(LED_PIN, LOW);
+  delay(500);
+  digitalWrite(LED_PIN, HIGH);
+  delay(500);
+  digitalWrite(LED_PIN, LOW);
 
+  //irsend.sendNEC(DARK_BLUE, 32);
+  ENABLE_INTERRUPTS;
   set_sleep_mode(SLEEP_MODE_PWR_DOWN);
 
   // Serial.begin(9600);
