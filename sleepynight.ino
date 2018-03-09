@@ -1,5 +1,5 @@
 #include <avr/sleep.h>
-#include <ir_Lego_PF_BitStreamEncoder.h>
+//#include <ir_Lego_PF_BitStreamEncoder.h>
 #include <boarddefs.h>
 #include <IRremoteInt.h>
 #include <IRremote.h>
@@ -11,7 +11,7 @@
 
 #define ENABLE_INTERRUPTS do { \
   GIMSK = 0b00100000; \
-  PCMSK = 0b00010011; \
+  PCMSK = 0b00000100; \
   sei(); \
 } while (0)
 
@@ -78,8 +78,8 @@ volatile unsigned long last_click = 0;
 volatile unsigned long last_handled_click = 0;
 
 INTERRUPT {
-  digitalWrite(LED_PIN, HIGH);
   was_clicked = (digitalRead(BUTTON_PIN) != HIGH);
+  digitalWrite(LED_PIN, HIGH);
 }
 
 void handleClick() {
@@ -102,15 +102,15 @@ void setup() {
 
   // Here's a sequence just to see that it's running.
   digitalWrite(LED_PIN, HIGH);
-  delay(500);
+  delay(200);
   digitalWrite(LED_PIN, LOW);
-  delay(500);
+  delay(200);
   digitalWrite(LED_PIN, HIGH);
-  delay(500);
+  delay(200);
   digitalWrite(LED_PIN, LOW);
-  delay(500);
+  delay(200);
   digitalWrite(LED_PIN, HIGH);
-  delay(500);
+  delay(200);
   digitalWrite(LED_PIN, LOW);
 
   //irsend.sendNEC(DARK_BLUE, 32);
@@ -128,5 +128,5 @@ void loop() {
   }
   handleClick();
   // Serial.write("awake!\n");
-  delay(100);
+  delay(1000);
 }
