@@ -6,12 +6,12 @@
 
 #if defined(__AVR_ATtiny85__)
 #define IR_PIN 1
-#define LED_PIN 3
-#define BUTTON_PIN 2
+#define LED_PIN 2
+#define BUTTON_PIN 3
 
 #define ENABLE_INTERRUPTS do { \
   GIMSK = 0b00100000; \
-  PCMSK = 0b00000100; \
+  PCMSK = 0b00001000; \
   sei(); \
 } while (0)
 
@@ -64,6 +64,7 @@ void step() {
   if (color >= 14) {
     color = 0;
   }
+  // TODO: There's something about this that breaks other pins.
   irsend.sendNEC(COLORS[color], 32);
 }
 
