@@ -1,7 +1,4 @@
 #include <avr/sleep.h>
-//#include <ir_Lego_PF_BitStreamEncoder.h>
-#include <boarddefs.h>
-#include <IRremoteInt.h>
 #include <IRremote.h>
 
 #if defined(__AVR_ATtiny85__)
@@ -64,37 +61,13 @@ void step() {
   if (color >= 14) {
     color = 0;
   }
-  // TODO: There's something about this that breaks other pins.
   irsend.sendNEC(COLORS[color], 32);
 }
 
-void sleep() {
-  digitalWrite(LED_PIN, LOW);
-  delay(5);
-  sleep_mode();
-}
-
 volatile bool was_clicked = false;
-volatile unsigned long last_click = 0;
-volatile unsigned long last_handled_click = 0;
 
 INTERRUPT {
   was_clicked = (digitalRead(BUTTON_PIN) != HIGH);
-  digitalWrite(LED_PIN, HIGH);
-}
-
-void handleClick() {
-  if (!was_clicked) {
-    return;
-  }
-  was_clicked = false;
-  last_click = millis();
-  if (last_click - last_handled_click < 200) {
-    return;
-  }
-  last_handled_click = last_click;
-  // Serial.write("click!\n");
-  step();
 }
 
 void setup() {
@@ -114,20 +87,16 @@ void setup() {
   delay(200);
   digitalWrite(LED_PIN, LOW);
 
-  //irsend.sendNEC(DARK_BLUE, 32);
   ENABLE_INTERRUPTS;
   set_sleep_mode(SLEEP_MODE_PWR_DOWN);
-
-  // Serial.begin(9600);
 }
 
 void loop() {
-  unsigned long now = millis();
-  if (now - last_click > 500) {
-    // Serial.write("Sleeping\n");
-    sleep();
+  digitalWrite(LED_PIN, HIGH);
+  if (was_clicked) {
+    was_clicked = false;
+    step();
   }
-  handleClick();
-  // Serial.write("awake!\n");
-  delay(1000);
+  digitalWrite(LED_PIN, LOW);
+  sleep_mode();
 }
