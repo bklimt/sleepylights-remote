@@ -71,6 +71,8 @@ INTERRUPT {
 }
 
 void setup() {
+  OSCCAL = 0xA4;
+  
   pinMode(BUTTON_PIN, INPUT_PULLUP);
   pinMode(LED_PIN, OUTPUT);
 
