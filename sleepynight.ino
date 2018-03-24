@@ -1,32 +1,13 @@
 #include <avr/sleep.h>
 #include <IRremote.h>
 
-#if defined(__AVR_ATtiny85__)
-#define IR_PIN 1
-//#define LED_PIN 2
-#define BUTTON_PIN 2
-
-#define ENABLE_INTERRUPTS do { \
-  GIMSK = 0b00100000; \
-  PCMSK = 0b00001000; \
-  sei(); \
-} while (0)
-
-#define INTERRUPT ISR(PCINT0_vect)
-
-#else
-#error "no"
-#define IR_PIN 3
-#define LED_PIN 1
-#define BUTTON_PIN 2
-
-#define ENABLE_INTERRUPTS do { \
-  attachInterrupt(digitalPinToInterrupt(BUTTON_PIN), click, FALLING); \
-} while (0)
-
-#define INTERRUPT void click()
-
+#ifndef __AVR_ATtiny85__
+#error "This program only works with an ATtiny85."
 #endif
+
+// The IR LED should be on pin 1.
+
+#define BUTTON_PIN 2
 
 unsigned long POWER       = 0x00FF609F;
 unsigned long SLEEP       = 0x00FF50AF;
@@ -67,43 +48,31 @@ void step() {
 
 volatile bool was_clicked = false;
 
-INTERRUPT {
+ISR(PCINT0_vect) {
   was_clicked = (digitalRead(BUTTON_PIN) != HIGH);
 }
 
 void setup() {
+  // Set a calibration value based on TinyTuner output.
   OSCCAL = 0xA4;
   
   pinMode(BUTTON_PIN, INPUT_PULLUP);
-  /*
-  pinMode(LED_PIN, OUTPUT);
 
-  // Here's a sequence just to see that it's running.
-  digitalWrite(LED_PIN, HIGH);
-  delay(200);
-  digitalWrite(LED_PIN, LOW);
-  delay(200);
-  digitalWrite(LED_PIN, HIGH);
-  delay(200);
-  digitalWrite(LED_PIN, LOW);
-  delay(200);
-  digitalWrite(LED_PIN, HIGH);
-  delay(200);
-  digitalWrite(LED_PIN, LOW);
-  */
+  // Enable interrupts for the button pin.
+  GIMSK = 0b00100000;
+  PCMSK = 1 << BUTTON_PIN;
+  sei();
 
-  ENABLE_INTERRUPTS;
   set_sleep_mode(SLEEP_MODE_PWR_DOWN);
+  
   // Disable the ADC, since we aren't using it.
-  // ADCSRA &= ~(1<<ADEN);
+  ADCSRA &= ~(1<<ADEN);
 }
 
 void loop() {
-  // digitalWrite(LED_PIN, HIGH);
   if (was_clicked) {
     was_clicked = false;
     step();
   }
-  // digitalWrite(LED_PIN, LOW);
   sleep_mode();
 }
