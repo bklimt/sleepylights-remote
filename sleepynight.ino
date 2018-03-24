@@ -3,8 +3,8 @@
 
 #if defined(__AVR_ATtiny85__)
 #define IR_PIN 1
-#define LED_PIN 2
-#define BUTTON_PIN 3
+//#define LED_PIN 2
+#define BUTTON_PIN 2
 
 #define ENABLE_INTERRUPTS do { \
   GIMSK = 0b00100000; \
@@ -55,8 +55,9 @@ unsigned long COLORS[14] = {
 
 IRsend irsend;
 
+int color = ORANGE;
+
 void step() {
-  static int color = ORANGE;
   color = color + 1;
   if (color >= 14) {
     color = 0;
@@ -74,6 +75,7 @@ void setup() {
   OSCCAL = 0xA4;
   
   pinMode(BUTTON_PIN, INPUT_PULLUP);
+  /*
   pinMode(LED_PIN, OUTPUT);
 
   // Here's a sequence just to see that it's running.
@@ -88,17 +90,20 @@ void setup() {
   digitalWrite(LED_PIN, HIGH);
   delay(200);
   digitalWrite(LED_PIN, LOW);
+  */
 
   ENABLE_INTERRUPTS;
   set_sleep_mode(SLEEP_MODE_PWR_DOWN);
+  // Disable the ADC, since we aren't using it.
+  // ADCSRA &= ~(1<<ADEN);
 }
 
 void loop() {
-  digitalWrite(LED_PIN, HIGH);
+  // digitalWrite(LED_PIN, HIGH);
   if (was_clicked) {
     was_clicked = false;
     step();
   }
-  digitalWrite(LED_PIN, LOW);
+  // digitalWrite(LED_PIN, LOW);
   sleep_mode();
 }
