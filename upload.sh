@@ -1,1 +1,1 @@
-../Arduino/build/linux/work/arduino --upload sleepynight.ino --port /dev/ttyACM*
+../Arduino/build/linux/work/arduino --upload sleepylights.ino --port /dev/ttyACM*

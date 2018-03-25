@@ -1,1 +1,1 @@
-../Arduino/build/linux/work/arduino --verify sleepynight.ino
+../Arduino/build/linux/work/arduino --verify sleepylights.ino
