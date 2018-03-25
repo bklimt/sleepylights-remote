@@ -9,6 +9,8 @@
 
 #define BUTTON_PIN 2
 
+// Remote constants from https://github.com/nothans/sleepylights-ir-codes
+
 unsigned long POWER       = 0x00FF609F;
 unsigned long SLEEP       = 0x00FF50AF;
 unsigned long TIMER       = 0x00FF7887;
@@ -66,7 +68,7 @@ void setup() {
   set_sleep_mode(SLEEP_MODE_PWR_DOWN);
   
   // Disable the ADC, since we aren't using it.
-  ADCSRA &= ~(1<<ADEN);
+  ADCSRA &= ~(1 << ADEN);
 }
 
 void loop() {
